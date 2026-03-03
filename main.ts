@@ -2,20 +2,19 @@ import { handleNotification } from "./handlers/notification.ts";
 import { handleTaskCompleted } from "./handlers/task_completed.ts";
 import { handleStop } from "./handlers/stop.ts";
 import { handleSessionEnd } from "./handlers/session_end.ts";
+import { handleAskQuestion } from "./handlers/ask_question.ts";
 import { getConfig } from "./config.ts";
 import type { AnyHook } from "./handlers/types.ts";
 
 Deno.serve(async (req: Request) => {
   const url = new URL(req.url);
 
-  // Health check
   if (req.method === "GET" && url.pathname === "/") {
     return new Response(JSON.stringify({ status: "ok", service: "claude-thermal" }), {
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  // Hook endpoint
   if (req.method === "POST" && url.pathname === "/hook") {
     return await handleHookRequest(req);
   }
@@ -26,7 +25,6 @@ Deno.serve(async (req: Request) => {
 async function handleHookRequest(req: Request): Promise<Response> {
   const { hookSecret } = getConfig();
 
-  // Verify shared secret if configured
   if (hookSecret) {
     const provided =
       req.headers.get("X-Thermal-Key") ?? req.headers.get("X-Hook-Secret") ?? "";
@@ -43,7 +41,7 @@ async function handleHookRequest(req: Request): Promise<Response> {
     return new Response("Bad Request: invalid JSON", { status: 400 });
   }
 
-  const hook = body as AnyHook;
+  const hook = body as AnyHook & { tool_name?: string; tool_input?: Record<string, unknown> };
   const event = hook.hook_event_name;
 
   console.log(`[main] Received hook: ${event} | session: ${hook.session_id} | cwd: ${hook.cwd}`);
@@ -62,12 +60,17 @@ async function handleHookRequest(req: Request): Promise<Response> {
       case "SessionEnd":
         await handleSessionEnd(hook as Parameters<typeof handleSessionEnd>[0]);
         break;
+      case "PreToolUse":
+        if (hook.tool_name === "AskUserQuestion") {
+          // deno-lint-ignore no-explicit-any
+          await handleAskQuestion(hook as any);
+        }
+        break;
       default:
         console.log(`[main] Ignoring unhandled event: ${event}`);
     }
   } catch (err) {
     console.error(`[main] Handler error for ${event}:`, err);
-    // Return 200 anyway — we don't want to block Claude Code on printer errors
     return new Response(
       JSON.stringify({ ok: false, error: String(err) }),
       { status: 200, headers: { "Content-Type": "application/json" } },

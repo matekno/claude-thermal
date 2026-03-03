@@ -19,7 +19,8 @@
       "Bash(echo \"THERMAL_API_KEY=$THERMAL_API_KEY\")",
       "Bash(echo \"Exit: $?\")",
       "Bash(\"C:/Users/matir/AppData/Roaming/npm/deno.cmd\" eval \"console.log\\(''THERMAL_HOOK_URL:'', Deno.env.get\\(''THERMAL_HOOK_URL''\\)\\); console.log\\(''THERMAL_API_KEY:'', Deno.env.get\\(''THERMAL_API_KEY''\\)\\)\")",
-      "Bash(curl -s -X POST https://claude-thermal.deno.dev/hook -H \"Content-Type: application/json\" -H \"X-Thermal-Key: c4bWnsTJu7k7Tr2HygmGuAezj8mxs4IY\" -d '{\"\"hook_event_name\"\":\"\"Stop\"\",\"\"cwd\"\":\"\"D:/test\"\",\"\"session_id\"\":\"\"debug-unique-999\"\",\"\"transcript_context\"\":{\"\"modified_files\"\":[],\"\"completed_tasks\"\":[],\"\"pending_tasks\"\":[],\"\"last_assistant_message\"\":\"\"test\"\",\"\"total_tool_uses\"\":0}}')"
+      "Bash(curl -s -X POST https://claude-thermal.deno.dev/hook -H \"Content-Type: application/json\" -H \"X-Thermal-Key: c4bWnsTJu7k7Tr2HygmGuAezj8mxs4IY\" -d '{\"\"hook_event_name\"\":\"\"Stop\"\",\"\"cwd\"\":\"\"D:/test\"\",\"\"session_id\"\":\"\"debug-unique-999\"\",\"\"transcript_context\"\":{\"\"modified_files\"\":[],\"\"completed_tasks\"\":[],\"\"pending_tasks\"\":[],\"\"last_assistant_message\"\":\"\"test\"\",\"\"total_tool_uses\"\":0}}')",
+      "Bash(git add config.ts)"
     ]
   }
 }
