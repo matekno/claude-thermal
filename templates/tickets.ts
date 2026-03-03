@@ -20,8 +20,8 @@ function calcCost(usage: TokenUsage): number {
 }
 
 function formatCost(usd: number): string {
-  if (usd < 0.01) return `$${(usd * 100).toFixed(3)}¢`;
-  return `$${usd.toFixed(4)}`;
+  if (usd < 0.01) return `${(usd * 100).toFixed(2)}¢`;
+  return `$${usd.toFixed(3)}`;
 }
 
 function fmtK(n: number): string {
@@ -186,21 +186,21 @@ export function buildStopTicket(
   }
 
   // Token usage & cost
-  if (tokenUsage && (tokenUsage.input_tokens > 0 || tokenUsage.output_tokens > 0)) {
+  if (tokenUsage && (tokenUsage.input_tokens > 0 || tokenUsage.output_tokens > 0 || tokenUsage.cache_read_tokens > 0)) {
     const cost = calcCost(tokenUsage);
     elements.push(
-      { type: "text", content: "TOKENS:", align: "left", bold: true },
+      { type: "text", content: "TOKENS (S4.6):", align: "left", bold: true },
       {
         type: "table",
-        tableColumns: ["", "in", "out"],
+        tableColumns: ["", "in", "cache", "out"],
         tableRows: [
-          ["Sonnet", fmtK(tokenUsage.input_tokens), fmtK(tokenUsage.output_tokens)],
+          ["S4.6", fmtK(tokenUsage.input_tokens), fmtK(tokenUsage.cache_read_tokens), fmtK(tokenUsage.output_tokens)],
           ...(tokenUsage.haiku_input_tokens
-            ? [["Haiku", fmtK(tokenUsage.haiku_input_tokens), fmtK(tokenUsage.haiku_output_tokens ?? 0)]]
+            ? [["H4.5", fmtK(tokenUsage.haiku_input_tokens), "-", fmtK(tokenUsage.haiku_output_tokens ?? 0)]]
             : []),
         ],
       },
-      { type: "text", content: `Costo est.: ${formatCost(cost)}`, align: "right", bold: true },
+      { type: "text", content: `Costo: ${formatCost(cost)}`, align: "right", bold: true },
       { type: "separator" },
     );
   }
@@ -265,22 +265,22 @@ export function buildSessionEndTicket(
   );
 
   // Token usage & cost
-  if (tokenUsage && (tokenUsage.input_tokens > 0 || tokenUsage.output_tokens > 0)) {
+  if (tokenUsage && (tokenUsage.input_tokens > 0 || tokenUsage.output_tokens > 0 || tokenUsage.cache_read_tokens > 0)) {
     const cost = calcCost(tokenUsage);
     elements.push(
       { type: "separator" },
       { type: "text", content: "TOKENS SESION:", align: "left", bold: true },
       {
         type: "table",
-        tableColumns: ["", "in", "out"],
+        tableColumns: ["", "in", "cache", "out"],
         tableRows: [
-          ["Sonnet", fmtK(tokenUsage.input_tokens), fmtK(tokenUsage.output_tokens)],
+          ["S4.6", fmtK(tokenUsage.input_tokens), fmtK(tokenUsage.cache_read_tokens), fmtK(tokenUsage.output_tokens)],
           ...(tokenUsage.haiku_input_tokens
-            ? [["Haiku", fmtK(tokenUsage.haiku_input_tokens), fmtK(tokenUsage.haiku_output_tokens ?? 0)]]
+            ? [["H4.5", fmtK(tokenUsage.haiku_input_tokens), "-", fmtK(tokenUsage.haiku_output_tokens ?? 0)]]
             : []),
         ],
       },
-      { type: "text", content: `Total est.: ${formatCost(cost)}`, align: "right", bold: true },
+      { type: "text", content: `Total: ${formatCost(cost)}`, align: "right", bold: true },
     );
   }
 

@@ -22,7 +22,7 @@ export async function getRandomPasuk(): Promise<Pasuk> {
   const maxVerse = PIRKEI_AVOT_CHAPTERS[chapter];
   const verse = randomInt(1, maxVerse);
 
-  const cacheKey = ["sefaria", "avot", chapter, verse];
+  const cacheKey = ["sefaria", "v2", "avot", chapter, verse];
 
   try {
     const db = await getKv();
