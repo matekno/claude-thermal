@@ -66,6 +66,9 @@ async function fetchFromSefaria(chapter: number, verse: number): Promise<Pasuk> 
   // Strip HTML tags from Sefaria response
   text = text.replace(/<[^>]+>/g, "").trim();
 
+  // Truncate at word boundary to max 140 chars
+  text = truncateAtWord(text, 140);
+
   return {
     text,
     ref: `Avot ${chapter}:${verse}`,
@@ -83,6 +86,12 @@ function fallbackPasuk(): Pasuk {
     { text: "Say little and do much, and receive every person with a pleasant countenance.", ref: "Avot 1:15", chapter: 1, verse: 15 },
   ];
   return fallbacks[randomInt(0, fallbacks.length - 1)];
+}
+
+function truncateAtWord(text: string, maxLen: number): string {
+  if (text.length <= maxLen) return text;
+  const cut = text.lastIndexOf(" ", maxLen);
+  return (cut > 0 ? text.slice(0, cut) : text.slice(0, maxLen)) + "...";
 }
 
 function randomInt(min: number, max: number): number {

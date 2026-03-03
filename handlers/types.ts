@@ -47,6 +47,16 @@ export interface SessionEndHook extends HookBase {
   session_started_at?: string; // ISO timestamp
 }
 
+// Token usage extracted from transcript
+export interface TokenUsage {
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_tokens: number;
+  // Haiku generation cost (added server-side after summary generation)
+  haiku_input_tokens?: number;
+  haiku_output_tokens?: number;
+}
+
 // Extracted context from local transcript JSONL parsing
 export interface TranscriptContext {
   modified_files: string[];
@@ -55,6 +65,7 @@ export interface TranscriptContext {
   last_assistant_message: string;
   total_tool_uses: number;
   session_started_at?: string;
+  token_usage?: TokenUsage;
 }
 
 // Union type for all supported hooks

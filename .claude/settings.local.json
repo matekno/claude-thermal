@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth status)",
+      "Bash(git add README.md config.ts deno.json handlers/ main.ts scripts/ services/ templates/ .claude/settings.json)",
+      "Bash(git commit:*)",
+      "Bash(gh repo create claude-thermal --public --source=. --remote=origin --push --description \"Claude Code POS Hook — prints thermal tickets with Pirkei Avot psukim on dev events\")",
+      "Bash(curl -s -X POST https://claude-thermal.deno.dev/hook -H \"Content-Type: application/json\" -H \"X-Thermal-Key: c4bWnsTJu7k7Tr2HygmGuAezj8mxs4IY\" -d '{\"\"hook_event_name\"\":\"\"Notification\"\",\"\"message\"\":\"\"Claude necesita tu aprobacion para ejecutar bash\"\",\"\"notification_type\"\":\"\"permission_prompt\"\",\"\"cwd\"\":\"\"D:/Programacion/claude-thermal\"\",\"\"session_id\"\":\"\"test-123\"\"}')",
+      "Bash(curl -s -X POST https://claude-thermal.deno.dev/hook -H \"Content-Type: application/json\" -H \"X-Thermal-Key: c4bWnsTJu7k7Tr2HygmGuAezj8mxs4IY\" -d '{\"\"hook_event_name\"\":\"\"TaskCompleted\"\",\"\"task_description\"\":\"\"Implementar autenticacion JWT\"\",\"\"cwd\"\":\"\"D:/Programacion/mi-proyecto\"\",\"\"session_id\"\":\"\"test-123\"\"}')",
+      "Bash(curl -s -X POST https://claude-thermal.deno.dev/hook -H \"Content-Type: application/json\" -H \"X-Thermal-Key: c4bWnsTJu7k7Tr2HygmGuAezj8mxs4IY\" -d '{\"\"hook_event_name\"\":\"\"Stop\"\",\"\"cwd\"\":\"\"D:/Programacion/claude-thermal\"\",\"\"session_id\"\":\"\"test-123\"\",\"\"transcript_context\"\":{\"\"modified_files\"\":[\"\"main.ts\"\",\"\"handlers/stop.ts\"\"],\"\"completed_tasks\"\":[\"\"Crear servidor Deno\"\",\"\"Configurar hooks\"\"],\"\"pending_tasks\"\":[\"\"Deploy a produccion\"\"],\"\"last_assistant_message\"\":\"\"Listo, implement\\\\u00e9 los handlers para todos los eventos\"\",\"\"total_tool_uses\"\":12}}')",
+      "Bash(powershell.exe -Command \"[System.Environment]::GetEnvironmentVariable\\(''THERMAL_HOOK_URL'', ''User''\\); [System.Environment]::GetEnvironmentVariable\\(''THERMAL_API_KEY'', ''User''\\)\")",
+      "Bash(git add -A)",
+      "Bash(git push)"
+    ]
+  }
+}

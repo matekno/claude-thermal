@@ -4,14 +4,24 @@ import { printTicket } from "../services/printer.ts";
 import { buildSessionEndTicket } from "../templates/tickets.ts";
 import { generateSessionSummary } from "../services/claude.ts";
 import { getConfig } from "../config.ts";
+import type { TokenUsage } from "./types.ts";
 
 export async function handleSessionEnd(hook: SessionEndHook): Promise<void> {
   const context = hook.transcript_context;
   const project = hook.cwd.split(/[\\/]/).filter(Boolean).pop() ?? hook.cwd;
 
   let summary = "";
+  let tokenUsage: TokenUsage | undefined = context?.token_usage;
   if (context && getConfig().anthropicApiKey) {
-    summary = await generateSessionSummary(context, project);
+    const result = await generateSessionSummary(context, project);
+    summary = result.text;
+    if (tokenUsage && result.usage) {
+      tokenUsage = {
+        ...tokenUsage,
+        haiku_input_tokens: result.usage.input_tokens,
+        haiku_output_tokens: result.usage.output_tokens,
+      };
+    }
   }
 
   const pasuk = await getRandomPasuk();
@@ -23,6 +33,7 @@ export async function handleSessionEnd(hook: SessionEndHook): Promise<void> {
     hook.cwd,
     hook.session_started_at ?? context?.session_started_at,
     pasuk,
+    tokenUsage,
   );
 
   await printTicket(ticket);

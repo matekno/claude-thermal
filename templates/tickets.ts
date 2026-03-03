@@ -1,4 +1,32 @@
-import type { ThermalElement, ThermalTicket, Pasuk } from "../handlers/types.ts";
+import type { ThermalElement, ThermalTicket, Pasuk, TokenUsage } from "../handlers/types.ts";
+
+// ── Token cost calculation ────────────────────────────────────────────────────
+// Prices per million tokens
+const SONNET_IN  = 3.00;
+const SONNET_OUT = 15.00;
+const SONNET_CACHE = 0.30;
+const HAIKU_IN   = 0.80;
+const HAIKU_OUT  = 4.00;
+
+function calcCost(usage: TokenUsage): number {
+  const main =
+    (usage.input_tokens / 1_000_000) * SONNET_IN +
+    (usage.output_tokens / 1_000_000) * SONNET_OUT +
+    (usage.cache_read_tokens / 1_000_000) * SONNET_CACHE;
+  const haiku =
+    ((usage.haiku_input_tokens ?? 0) / 1_000_000) * HAIKU_IN +
+    ((usage.haiku_output_tokens ?? 0) / 1_000_000) * HAIKU_OUT;
+  return main + haiku;
+}
+
+function formatCost(usd: number): string {
+  if (usd < 0.01) return `$${(usd * 100).toFixed(3)}¢`;
+  return `$${usd.toFixed(4)}`;
+}
+
+function fmtK(n: number): string {
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -109,6 +137,7 @@ export function buildStopTicket(
   pendingTasks: string[],
   cwd: string,
   pasuk: Pasuk,
+  tokenUsage?: TokenUsage,
 ): ThermalTicket {
   const elements: ThermalElement[] = [
     ...header("CLAUDE TERMINO"),
@@ -156,6 +185,26 @@ export function buildStopTicket(
     elements.push({ type: "separator" });
   }
 
+  // Token usage & cost
+  if (tokenUsage && (tokenUsage.input_tokens > 0 || tokenUsage.output_tokens > 0)) {
+    const cost = calcCost(tokenUsage);
+    elements.push(
+      { type: "text", content: "TOKENS:", align: "left", bold: true },
+      {
+        type: "table",
+        tableColumns: ["", "in", "out"],
+        tableRows: [
+          ["Sonnet", fmtK(tokenUsage.input_tokens), fmtK(tokenUsage.output_tokens)],
+          ...(tokenUsage.haiku_input_tokens
+            ? [["Haiku", fmtK(tokenUsage.haiku_input_tokens), fmtK(tokenUsage.haiku_output_tokens ?? 0)]]
+            : []),
+        ],
+      },
+      { type: "text", content: `Costo est.: ${formatCost(cost)}`, align: "right", bold: true },
+      { type: "separator" },
+    );
+  }
+
   elements.push(...footer(pasuk));
 
   return { template: { name: "Stop", elements } };
@@ -171,6 +220,7 @@ export function buildSessionEndTicket(
   cwd: string,
   startedAt: string | undefined,
   pasuk: Pasuk,
+  tokenUsage?: TokenUsage,
 ): ThermalTicket {
   const elements: ThermalElement[] = [
     ...header("FIN DE SESION"),
@@ -213,6 +263,26 @@ export function buildSessionEndTicket(
   elements.push(
     { type: "text", content: `Archivos: ${modifiedFiles.length}`, align: "left" },
   );
+
+  // Token usage & cost
+  if (tokenUsage && (tokenUsage.input_tokens > 0 || tokenUsage.output_tokens > 0)) {
+    const cost = calcCost(tokenUsage);
+    elements.push(
+      { type: "separator" },
+      { type: "text", content: "TOKENS SESION:", align: "left", bold: true },
+      {
+        type: "table",
+        tableColumns: ["", "in", "out"],
+        tableRows: [
+          ["Sonnet", fmtK(tokenUsage.input_tokens), fmtK(tokenUsage.output_tokens)],
+          ...(tokenUsage.haiku_input_tokens
+            ? [["Haiku", fmtK(tokenUsage.haiku_input_tokens), fmtK(tokenUsage.haiku_output_tokens ?? 0)]]
+            : []),
+        ],
+      },
+      { type: "text", content: `Total est.: ${formatCost(cost)}`, align: "right", bold: true },
+    );
+  }
 
   elements.push(...footer(pasuk));
 

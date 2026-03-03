@@ -1,15 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-net --allow-env
 /**
  * stop-hook.ts — Local Claude Code hook script for the "Stop" event.
- *
  * Install: copy to ~/.claude/hooks/stop-hook.ts
- *
- * Claude Code passes the hook payload as JSON on stdin.
- * This script:
- *  1. Reads the hook payload from stdin
- *  2. Reads & parses the transcript JSONL (up to last 30 entries)
- *  3. Extracts: modified files, completed/pending tasks, last assistant message
- *  4. POSTs the enriched payload to the Deno Deploy server
  */
 
 const DEPLOY_URL = Deno.env.get("THERMAL_HOOK_URL") ?? "";
@@ -20,7 +12,6 @@ if (!DEPLOY_URL) {
   Deno.exit(0);
 }
 
-// Read stdin
 const rawInput = new TextDecoder().decode(await readAllStdin());
 let hook: Record<string, unknown>;
 try {
@@ -31,11 +22,8 @@ try {
 }
 
 const transcriptPath = hook.transcript_path as string | undefined;
+const context = transcriptPath ? await extractTranscriptContext(transcriptPath, 40) : null;
 
-// Extract context from transcript
-const context = transcriptPath ? await extractTranscriptContext(transcriptPath, 30) : null;
-
-// Send enriched payload to Deno Deploy
 const payload = { ...hook, transcript_context: context };
 
 try {
@@ -48,7 +36,6 @@ try {
     body: JSON.stringify(payload),
     signal: AbortSignal.timeout(20000),
   });
-
   if (!res.ok) {
     const text = await res.text();
     console.error(`[stop-hook] Server error ${res.status}: ${text}`);
@@ -63,27 +50,18 @@ Deno.exit(0);
 
 async function readAllStdin(): Promise<Uint8Array> {
   const chunks: Uint8Array[] = [];
-  for await (const chunk of Deno.stdin.readable) {
-    chunks.push(chunk);
-  }
+  for await (const chunk of Deno.stdin.readable) chunks.push(chunk);
   const total = chunks.reduce((acc, c) => acc + c.length, 0);
   const result = new Uint8Array(total);
   let offset = 0;
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
+  for (const chunk of chunks) { result.set(chunk, offset); offset += chunk.length; }
   return result;
 }
 
-interface TranscriptEntry {
-  type: string;
-  role?: string;
-  message?: {
-    role?: string;
-    content?: unknown[];
-  };
-  content?: unknown[];
+interface TokenUsage {
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_tokens: number;
 }
 
 interface TranscriptContext {
@@ -93,6 +71,7 @@ interface TranscriptContext {
   last_assistant_message: string;
   total_tool_uses: number;
   session_started_at?: string;
+  token_usage?: TokenUsage;
 }
 
 async function extractTranscriptContext(
@@ -105,6 +84,7 @@ async function extractTranscriptContext(
     pending_tasks: [],
     last_assistant_message: "",
     total_tool_uses: 0,
+    token_usage: { input_tokens: 0, output_tokens: 0, cache_read_tokens: 0 },
   };
 
   let text: string;
@@ -116,59 +96,55 @@ async function extractTranscriptContext(
 
   const lines = text.trim().split("\n").filter(Boolean);
   const recentLines = lines.slice(-maxEntries);
-
   const modifiedFilesSet = new Set<string>();
 
   for (const line of recentLines) {
-    let entry: TranscriptEntry;
-    try {
-      entry = JSON.parse(line);
-    } catch {
-      continue;
+    let entry: Record<string, unknown>;
+    try { entry = JSON.parse(line); } catch { continue; }
+
+    const msg = entry.message as Record<string, unknown> | undefined;
+    const content = (entry.content ?? msg?.content ?? []) as unknown[];
+    const role = entry.role ?? msg?.role ?? entry.type;
+
+    // Extract token usage from assistant messages
+    if (role === "assistant" && msg?.usage) {
+      const u = msg.usage as Record<string, number>;
+      context.token_usage!.input_tokens += u.input_tokens ?? 0;
+      context.token_usage!.output_tokens += u.output_tokens ?? 0;
+      context.token_usage!.cache_read_tokens += u.cache_read_input_tokens ?? 0;
     }
 
-    // Handle both top-level and nested message formats
-    const content = entry.content ?? entry.message?.content ?? [];
     if (!Array.isArray(content)) continue;
-
-    const role = entry.role ?? entry.message?.role ?? entry.type;
 
     for (const block of content) {
       if (typeof block !== "object" || block === null) continue;
       const b = block as Record<string, unknown>;
 
-      // Tool use blocks
       if (b.type === "tool_use") {
         context.total_tool_uses++;
         const toolName = b.name as string ?? "";
         const input = b.input as Record<string, unknown> ?? {};
 
-        // Track file modifications
         if (["Edit", "Write", "NotebookEdit"].includes(toolName)) {
           const fp = input.file_path as string ?? input.notebook_path as string ?? "";
           if (fp) modifiedFilesSet.add(fp);
         }
 
-        // Track TodoWrite tasks
         if (toolName === "TodoWrite") {
           const todos = input.todos as Array<Record<string, unknown>> ?? [];
           context.completed_tasks = [];
           context.pending_tasks = [];
           for (const todo of todos) {
             const desc = String(todo.content ?? "");
-            if (todo.status === "completed") {
-              context.completed_tasks.push(desc);
-            } else if (todo.status === "pending" || todo.status === "in_progress") {
-              context.pending_tasks.push(desc);
-            }
+            if (todo.status === "completed") context.completed_tasks.push(desc);
+            else if (todo.status === "pending" || todo.status === "in_progress") context.pending_tasks.push(desc);
           }
         }
       }
 
-      // Last assistant text message
       if (role === "assistant" && b.type === "text") {
-        const text = String(b.text ?? "");
-        if (text.trim()) context.last_assistant_message = text;
+        const t = String(b.text ?? "");
+        if (t.trim()) context.last_assistant_message = t;
       }
     }
   }

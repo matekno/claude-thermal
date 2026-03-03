@@ -3,6 +3,7 @@ import { getRandomPasuk } from "../services/sefaria.ts";
 import { printTicket } from "../services/printer.ts";
 import { buildStopTicket } from "../templates/tickets.ts";
 import { generateStopSummary } from "../services/claude.ts";
+import type { TokenUsage } from "./types.ts";
 import { checkRateLimit, setRateLimit } from "./rate_limit.ts";
 import { getConfig } from "../config.ts";
 
@@ -24,8 +25,17 @@ export async function handleStop(hook: StopHook): Promise<void> {
 
   // Generate AI summary if we have context and ANTHROPIC_API_KEY
   let summary = "";
+  let tokenUsage: TokenUsage | undefined = context?.token_usage;
   if (context && getConfig().anthropicApiKey) {
-    summary = await generateStopSummary(context, project);
+    const result = await generateStopSummary(context, project);
+    summary = result.text;
+    if (tokenUsage && result.usage) {
+      tokenUsage = {
+        ...tokenUsage,
+        haiku_input_tokens: result.usage.input_tokens,
+        haiku_output_tokens: result.usage.output_tokens,
+      };
+    }
   }
 
   const pasuk = await getRandomPasuk();
@@ -36,6 +46,7 @@ export async function handleStop(hook: StopHook): Promise<void> {
     context?.pending_tasks ?? [],
     hook.cwd,
     pasuk,
+    tokenUsage,
   );
 
   await printTicket(ticket);
