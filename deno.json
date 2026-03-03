@@ -1,0 +1,15 @@
+{
+  "name": "claude-thermal",
+  "version": "1.0.0",
+  "imports": {
+    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@^0.36.3"
+  },
+  "tasks": {
+    "start": "deno run --allow-net --allow-env main.ts",
+    "dev": "deno run --allow-net --allow-env --watch main.ts"
+  },
+  "deploy": {
+    "project": "claude-thermal",
+    "entrypoint": "main.ts"
+  }
+}
