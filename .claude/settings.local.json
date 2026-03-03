@@ -10,7 +10,16 @@
       "Bash(curl -s -X POST https://claude-thermal.deno.dev/hook -H \"Content-Type: application/json\" -H \"X-Thermal-Key: c4bWnsTJu7k7Tr2HygmGuAezj8mxs4IY\" -d '{\"\"hook_event_name\"\":\"\"Stop\"\",\"\"cwd\"\":\"\"D:/Programacion/claude-thermal\"\",\"\"session_id\"\":\"\"test-123\"\",\"\"transcript_context\"\":{\"\"modified_files\"\":[\"\"main.ts\"\",\"\"handlers/stop.ts\"\"],\"\"completed_tasks\"\":[\"\"Crear servidor Deno\"\",\"\"Configurar hooks\"\"],\"\"pending_tasks\"\":[\"\"Deploy a produccion\"\"],\"\"last_assistant_message\"\":\"\"Listo, implement\\\\u00e9 los handlers para todos los eventos\"\",\"\"total_tool_uses\"\":12}}')",
       "Bash(powershell.exe -Command \"[System.Environment]::GetEnvironmentVariable\\(''THERMAL_HOOK_URL'', ''User''\\); [System.Environment]::GetEnvironmentVariable\\(''THERMAL_API_KEY'', ''User''\\)\")",
       "Bash(git add -A)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git add .claude/settings.json)",
+      "Bash(where deno)",
+      "Bash(deno --version)",
+      "Bash(\"C:/Users/matir/AppData/Roaming/npm/deno.cmd\" run --allow-read --allow-net --allow-env \"C:/Users/matir/.claude/hooks/stop-hook.ts\")",
+      "Bash(echo \"THERMAL_HOOK_URL=$THERMAL_HOOK_URL\")",
+      "Bash(echo \"THERMAL_API_KEY=$THERMAL_API_KEY\")",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(\"C:/Users/matir/AppData/Roaming/npm/deno.cmd\" eval \"console.log\\(''THERMAL_HOOK_URL:'', Deno.env.get\\(''THERMAL_HOOK_URL''\\)\\); console.log\\(''THERMAL_API_KEY:'', Deno.env.get\\(''THERMAL_API_KEY''\\)\\)\")",
+      "Bash(curl -s -X POST https://claude-thermal.deno.dev/hook -H \"Content-Type: application/json\" -H \"X-Thermal-Key: c4bWnsTJu7k7Tr2HygmGuAezj8mxs4IY\" -d '{\"\"hook_event_name\"\":\"\"Stop\"\",\"\"cwd\"\":\"\"D:/test\"\",\"\"session_id\"\":\"\"debug-unique-999\"\",\"\"transcript_context\"\":{\"\"modified_files\"\":[],\"\"completed_tasks\"\":[],\"\"pending_tasks\"\":[],\"\"last_assistant_message\"\":\"\"test\"\",\"\"total_tool_uses\"\":0}}')"
     ]
   }
 }

@@ -22,18 +22,25 @@ export async function generateStopSummary(
   context: TranscriptContext,
   project: string,
 ): Promise<SummaryResult> {
-  const prompt = `You are summarizing a software development AI assistant's work for a physical receipt printer.
-Write a 2-3 line plain text summary (no markdown, no bullets) of what was accomplished.
-Be specific and concise. Max 200 characters total.
+  const filesInfo = context.modified_files.length > 0
+    ? context.modified_files.slice(0, 5).map((f) => f.split(/[\\/]/).pop()).join(", ")
+    : "ninguno";
+  const tasksInfo = context.completed_tasks.length > 0
+    ? context.completed_tasks.slice(0, 3).join("; ")
+    : "ninguna";
 
-Project: ${project}
-Files modified: ${context.modified_files.length > 0 ? context.modified_files.slice(0, 5).join(", ") : "none"}
-Tasks completed: ${context.completed_tasks.length > 0 ? context.completed_tasks.slice(0, 3).join(", ") : "none"}
-Last message excerpt: ${context.last_assistant_message.slice(0, 300)}
+  const prompt = `Sos un asistente que resume el trabajo de una IA de desarrollo de software para una impresora de tickets física.
+Escribí un resumen en 2-3 oraciones en español rioplatense (argentina), sin markdown, sin bullets, sin asteriscos.
+Sé específico y útil: mencioná qué se hizo concretamente, no generalidades. Máximo 220 caracteres en total.
 
-Summary (2-3 lines, no markdown):`;
+Proyecto: ${project}
+Archivos modificados: ${filesInfo}
+Tareas completadas: ${tasksInfo}
+Último mensaje de Claude: ${context.last_assistant_message.slice(0, 400)}
 
-  return await callHaiku(prompt, 150);
+Resumen (2-3 oraciones, español argentino, sin formato):`;
+
+  return await callHaiku(prompt, 160);
 }
 
 // Generate a full session summary (for SessionEnd tickets)
@@ -41,19 +48,24 @@ export async function generateSessionSummary(
   context: TranscriptContext,
   project: string,
 ): Promise<SummaryResult> {
-  const prompt = `You are summarizing a software development session for a physical receipt printer.
-Write a 3-4 line plain text summary (no markdown, no bullets) of the full session.
-Be specific about what was built/fixed/changed. Max 300 characters total.
+  const filesInfo = context.modified_files
+    .slice(0, 8)
+    .map((f) => f.split(/[\\/]/).pop())
+    .join(", ") || "ninguno";
 
-Project: ${project}
-Total tool uses: ${context.total_tool_uses}
-Files modified (${context.modified_files.length}): ${context.modified_files.slice(0, 8).join(", ")}
-Tasks completed (${context.completed_tasks.length}): ${context.completed_tasks.slice(0, 5).join(", ")}
-Final message: ${context.last_assistant_message.slice(0, 400)}
+  const prompt = `Sos un asistente que resume una sesión de desarrollo de software para una impresora de tickets física.
+Escribí un resumen en 3-4 oraciones en español rioplatense (argentina), sin markdown, sin bullets, sin asteriscos.
+Mencioná qué se construyó, qué se arregló o qué se cambió. Sé concreto y útil. Máximo 320 caracteres en total.
 
-Session summary (3-4 lines, no markdown):`;
+Proyecto: ${project}
+Total de acciones: ${context.total_tool_uses}
+Archivos tocados (${context.modified_files.length}): ${filesInfo}
+Tareas completadas (${context.completed_tasks.length}): ${context.completed_tasks.slice(0, 5).join("; ") || "ninguna"}
+Último mensaje de Claude: ${context.last_assistant_message.slice(0, 400)}
 
-  return await callHaiku(prompt, 200);
+Resumen de sesión (3-4 oraciones, español argentino, sin formato):`;
+
+  return await callHaiku(prompt, 220);
 }
 
 async function callHaiku(prompt: string, maxTokens: number): Promise<SummaryResult> {
