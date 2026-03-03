@@ -10,7 +10,7 @@ export interface Config {
 export const DEFAULT_RATE_LIMITS: Record<string, number> = {
   Notification: 0,            // always print — it's urgent
   TaskCompleted: 0,           // always print — milestone
-  Stop: 3 * 60 * 1000,        // max 1 per 3 minutes
+  Stop: 0,                    // sin límite por ahora (ajustar después)
   SessionEnd: 0,              // always print — one per session
 };
 
