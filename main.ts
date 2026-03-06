@@ -4,6 +4,7 @@ import { handleStop } from "./handlers/stop.ts";
 import { handleSessionEnd } from "./handlers/session_end.ts";
 import { handleAskQuestion } from "./handlers/ask_question.ts";
 import { handleSubagent } from "./handlers/subagent.ts";
+import { handlePermissionRequest } from "./handlers/permission_request.ts";
 import { getConfig } from "./config.ts";
 import type { AnyHook } from "./handlers/types.ts";
 
@@ -69,6 +70,10 @@ async function handleHookRequest(req: Request): Promise<Response> {
           // deno-lint-ignore no-explicit-any
           await handleSubagent(hook as any);
         }
+        break;
+      case "PermissionRequest":
+        // deno-lint-ignore no-explicit-any
+        await handlePermissionRequest(hook as any);
         break;
       default:
         console.log(`[main] Ignoring unhandled event: ${event}`);

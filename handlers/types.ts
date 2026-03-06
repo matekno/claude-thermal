@@ -14,7 +14,8 @@ export type HookEventName =
   | "SessionEnd"
   | "PreToolUse"
   | "PostToolUse"
-  | "SessionStart";
+  | "SessionStart"
+  | "PermissionRequest";
 
 // Notification hook payload
 export interface NotificationHook extends HookBase {
