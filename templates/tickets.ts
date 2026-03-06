@@ -41,7 +41,7 @@ function header(title: string): ThermalElement[] {
 function footer(pasuk: Pasuk): ThermalElement[] {
   return [
     { type: "line", content: "-", align: "center" },
-    { type: "text", content: pasuk.text, align: "center" },
+    { type: "text", content: wrapLines(pasuk.text, 30), align: "center" },
     { type: "text", content: `\u2014 ${pasuk.ref}`, align: "center", bold: false },
     { type: "line", content: "=", align: "center" },
   ];
