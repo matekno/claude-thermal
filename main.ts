@@ -3,6 +3,7 @@ import { handleTaskCompleted } from "./handlers/task_completed.ts";
 import { handleStop } from "./handlers/stop.ts";
 import { handleSessionEnd } from "./handlers/session_end.ts";
 import { handleAskQuestion } from "./handlers/ask_question.ts";
+import { handleSubagent } from "./handlers/subagent.ts";
 import { getConfig } from "./config.ts";
 import type { AnyHook } from "./handlers/types.ts";
 
@@ -64,6 +65,9 @@ async function handleHookRequest(req: Request): Promise<Response> {
         if (hook.tool_name === "AskUserQuestion") {
           // deno-lint-ignore no-explicit-any
           await handleAskQuestion(hook as any);
+        } else if (hook.tool_name === "Task") {
+          // deno-lint-ignore no-explicit-any
+          await handleSubagent(hook as any);
         }
         break;
       default:
