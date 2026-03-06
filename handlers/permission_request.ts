@@ -1,5 +1,4 @@
 import type { HookBase } from "./types.ts";
-import { getRandomPasuk } from "../services/sefaria.ts";
 import { printTicket } from "../services/printer.ts";
 import type { ThermalElement, ThermalTicket } from "./types.ts";
 
@@ -12,25 +11,15 @@ interface PermissionRequestHook extends HookBase {
 export async function handlePermissionRequest(hook: PermissionRequestHook): Promise<void> {
   const tool = hook.tool_name ?? "herramienta desconocida";
   const project = hook.cwd.split(/[\\/]/).filter(Boolean).pop() ?? hook.cwd;
-  const pasuk = await getRandomPasuk();
-
-  // Extract a short description of what the tool will do
   const inputSummary = summarizeInput(tool, hook.tool_input ?? {});
 
   const elements: ThermalElement[] = [
-    { type: "line", content: "=", align: "center" },
-    { type: "text", content: "PERMISO REQUERIDO", align: "center", bold: true, large: true },
-    { type: "line", content: "=", align: "center" },
-    { type: "datetime", content: "DD/MM/YYYY HH:mm", align: "center" },
-    { type: "text", content: `Proyecto: ${project}`, align: "left" },
-    { type: "separator" },
-    { type: "text", content: `Tool: ${tool}`, align: "left", bold: true },
-    { type: "text", content: wrapLines(inputSummary, 30), align: "left" },
-    { type: "separator" },
     { type: "line", content: "-", align: "center" },
-    { type: "text", content: pasuk.text, align: "center" },
-    { type: "text", content: `\u2014 ${pasuk.ref}`, align: "center" },
-    { type: "line", content: "=", align: "center" },
+    { type: "text", content: "PERMISO REQUERIDO", align: "center", bold: true },
+    { type: "datetime", content: "HH:mm", align: "center" },
+    { type: "text", content: `[${project}] ${tool}`, align: "left", bold: true },
+    { type: "text", content: wrapLines(inputSummary, 32), align: "left" },
+    { type: "line", content: "-", align: "center" },
   ];
 
   const ticket: ThermalTicket = {
